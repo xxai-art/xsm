@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 fred = "6.3.0"
+tokio = { version = "1.29.1", features = ["macros", "rt", "rt-multi-thread", "time"] }
