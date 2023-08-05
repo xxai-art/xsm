@@ -5,8 +5,11 @@ use std::{cell::LazyCell, env, os::unix::ffi::OsStrExt, str::from_utf8};
 use anyhow::Result;
 use bytes::Bytes;
 use fred::{
-  interfaces::StreamsInterface,
-  prelude::{RedisClient, RedisErrorKind::Unknown},
+  interfaces::{ClientLike, StreamsInterface},
+  prelude::{
+    PerformanceConfig, ReconnectPolicy, RedisClient, RedisConfig, RedisErrorKind::Unknown,
+    ServerConfig,
+  },
   types::XID,
 };
 use gethostname::gethostname;
@@ -22,8 +25,63 @@ pub struct Client {
 
 const BLOCK: Option<u64> = Some(60000);
 const GROUP: &'static str = "C";
+pub struct Server {
+  c: ServerConfig,
+}
+
+impl Server {
+  pub fn cluster(host_port_li: Vec<(String, u16)>) -> Self {
+    Self {
+      c: ServerConfig::Clustered {
+        hosts: host_port_li
+          .into_iter()
+          .map(|(host, port)| fred::types::Server {
+            host: host.into(),
+            port,
+            tls_server_name: None,
+          })
+          .collect(),
+      },
+    }
+  }
+
+  pub fn host_port(host: String, port: u16) -> Self {
+    Self {
+      c: ServerConfig::Centralized {
+        server: fred::types::Server {
+          host: host.into(),
+          port,
+          tls_server_name: None,
+        },
+      },
+    }
+  }
+}
 
 impl Client {
+  pub async fn conn(
+    server: Server,
+    username: Option<String>,
+    password: Option<String>,
+  ) -> Result<Self> {
+    let version = fred::types::RespVersion::RESP3;
+    let mut conf = RedisConfig {
+      version,
+      ..Default::default()
+    };
+    conf.server = server.c.clone();
+    conf.username = username;
+    conf.password = password;
+    let perf = PerformanceConfig::default();
+    let policy = ReconnectPolicy::default();
+    let client = RedisClient::new(conf, Some(perf), Some(policy));
+
+    // connect to the server, returning a handle to the task that drives the connection
+    let _ = client.connect();
+    let _ = client.wait_for_connect().await?;
+    Ok(Self { c: client })
+  }
+
   pub async fn xnext(
     &self,
     key: impl AsRef<str>,
