@@ -1,7 +1,5 @@
 #![feature(lazy_cell)]
 
-use std::{cell::LazyCell, env, os::unix::ffi::OsStrExt, str::from_utf8};
-
 use anyhow::Result;
 use bytes::Bytes;
 use fred::{
@@ -24,7 +22,7 @@ pub struct Client {
 }
 
 const BLOCK: Option<u64> = Some(60000);
-const GROUP: &'static str = "C";
+const GROUP: &str = "C";
 pub struct Server {
   c: ServerConfig,
 }
@@ -78,7 +76,7 @@ impl Client {
 
     // connect to the server, returning a handle to the task that drives the connection
     let _ = client.connect();
-    let _ = client.wait_for_connect().await?;
+    client.wait_for_connect().await?;
     Ok(Self { c: client })
   }
 
