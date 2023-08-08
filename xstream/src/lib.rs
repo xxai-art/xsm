@@ -1,4 +1,6 @@
 #![feature(lazy_cell)]
+#![feature(const_option)]
+
 use std::ops::Deref;
 
 use anyhow::Result;
@@ -35,6 +37,7 @@ impl Deref for Client {
 }
 
 pub const BLOCK: Option<u64> = Some(60000);
+pub const PENDING: u32 = (BLOCK.unwrap() * 3) as u32;
 pub const GROUP: &str = "C";
 pub struct Server {
   c: ServerConfig,
@@ -108,17 +111,20 @@ impl Client {
       .fcall::<Option<bytes::Bytes>, _, _, _>(
         "xpendclaim",
         vec![stream.into(), GROUP.into(), HOSTNAME.to_string()],
-        vec![(BLOCK.unwrap() * 3) as u32, limit],
+        vec![0, limit],
+        //vec![PENDING, limit],
       )
       .await?
     {
       if !r.is_empty() {
         let b0 = r[0];
         if b0 < 6 {
-          let end = (b0 + 1) as _;
-          let bin_len = &r[1..end];
+          let b0 = b0 as usize;
+          let end = b0 + 1;
+          let mut bin_len = [0u8; 8];
+          bin_len[..b0].copy_from_slice(&r[1..end]);
           let begin = end;
-          let end = begin + usize::from_le_bytes(bin_len.try_into().unwrap());
+          let end = begin + usize::from_le_bytes(bin_len);
 
           let (_, li): (_, Vec<u64>) = unpack_array(&r[begin..end])?;
 

@@ -26,25 +26,9 @@ impl Client {
     let py = self_.py();
     let client = self_.0.clone();
     future_into_py(py, async move {
-      let r: Option<bytes::Bytes> = client.xpendclaim(stream, limit).await?;
+      let r = client.xpendclaim(stream, limit).await?;
 
-      Ok(Python::with_gil(|py| {
-        if let Some(r) = r {
-          if !r.is_empty() {
-            let b0 = r[0];
-            if b0 < 6 {
-              let end = (b0 + 1) as _;
-              let bin_len = &r[1..end];
-              let begin = end;
-              let end = begin + usize::from_le_bytes(bin_len.try_into().unwrap());
-
-              let bin = &r[begin..end];
-              return PyBytes::new(py, &r).into();
-            }
-          }
-        }
-        return py.None();
-      }))
+      Ok(Python::with_gil(|py| r))
     })
   }
 

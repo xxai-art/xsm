@@ -14,8 +14,6 @@ async def main():
 
   stream = "iaa"
   limit = 32
-  print(server)
-  print(dir(server), server.xpendclaim)
   r = await server.xpendclaim(stream, limit)
   print('xpendclaim', r)
   for xid, [(id, args)] in await server.xnext(stream, limit):
