@@ -23,21 +23,14 @@ fn server_host_port(
 
 #[pymethods]
 impl Client {
-  pub fn pending(self_: PyRef<'_, Self>, stream: String, limit: u64) -> PyResult<&PyAny> {
+  pub fn pending(self_: PyRef<'_, Self>, stream: String, limit: u32) -> PyResult<&PyAny> {
     let py = self_.py();
     let client = self_.0.clone();
     future_into_py(py, async move {
-      let r: anyhow::Result<Option<bytes::Bytes>> = client
-        .fcall(
-          "xpendclaim",
-          vec![stream, GROUP.into(), HOSTNAME.to_string()],
-          vec![(BLOCK.unwrap() * 3) as u32, limit as u32],
-        )
-        .await
-        .into();
+      let r: Option<bytes::Bytes> = client.xpendclaim(stream, limit).await?;
 
       Ok(Python::with_gil(|py| {
-        if let Some(r) = r? {
+        if let Some(r) = r {
           let r: PyObject = PyBytes::new(py, &r[..]).into();
           r
         } else {
