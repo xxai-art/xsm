@@ -1,4 +1,4 @@
-use pyo3::prelude::*;
+use pyo3::{prelude::*, types::PyBytes};
 
 #[pyclass]
 pub struct Client(xstream::Client);
@@ -29,9 +29,25 @@ impl Client {
     let py = self_.py();
     let client = self_.0.clone();
     pyo3_asyncio::tokio::future_into_py(py, async move {
-      let r = client.xnext(key, count).await?;
+      let li = client.xnext(key, count).await?;
 
-      Ok(Python::with_gil(|_| r))
+      Ok(Python::with_gil(|py| {
+        if let Some(li) = li {
+          li.into_iter()
+            .map(|(xid, kv)| {
+              let mut args = Vec::with_capacity(kv.len());
+              for (k, v) in kv {
+                let k: PyObject = PyBytes::new(py, &k[..]).into();
+                let v: PyObject = PyBytes::new(py, &v[..]).into();
+                args.push((k, v));
+              }
+              (xid, args)
+            })
+            .collect()
+        } else {
+          vec![]
+        }
+      }))
     })
   }
 }

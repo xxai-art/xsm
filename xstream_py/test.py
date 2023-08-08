@@ -11,7 +11,8 @@ async def main():
   server = await server_host_port(host, int(port), 'default',
                                   getenv('REDIS_PASSWORD'))
 
-  print(await server.xnext("iaa", 32))
+  for xid, [(id, args)] in await server.xnext("iaa", 32):
+    print(xid, id, args)
 
 
 asyncio.run(main())

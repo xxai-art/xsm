@@ -91,7 +91,7 @@ impl Client {
     &self,
     key: impl AsRef<str>,
     count: u64, // 获取的数量
-  ) -> Result<Option<Vec<(String, Vec<(Vec<u8>, Vec<u8>)>)>>> {
+  ) -> Result<Option<Vec<(String, Vec<(Bytes, Bytes)>)>>> {
     let key = key.as_ref();
     let count = Some(count);
     let hostname = &*HOSTNAME;
