@@ -14,13 +14,15 @@ async def main():
 
   stream = "iaa"
   limit = 32
-  for retry, t0, t1, id, args in await server.xpendclaim(stream, limit):
-    id = unpackb(id)
-    args = unpackb(args)
-    print(f"{retry} {t0}-{t1} {id} {args}")
+  while True:
+    for retry, t0, t1, id, args in await server.xpendclaim(stream, limit):
+      id = unpackb(id)
+      args = unpackb(args)
+      print(f"retry {retry} {t0}-{t1} {id} {args}")
 
-  for xid, [(id, args)] in await server.xnext(stream, limit):
-    print(xid, unpackb(id), unpackb(args))
+    print('xnext')
+    for xid, [(id, args)] in await server.xnext(stream, limit):
+      print(xid, unpackb(id), unpackb(args))
 
 
 asyncio.run(main())
