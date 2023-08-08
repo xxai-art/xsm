@@ -13,8 +13,18 @@ fn server_host_port(
   password: Option<String>,
 ) -> PyResult<&PyAny> {
   pyo3_asyncio::tokio::future_into_py(py, async move {
+    let block = 60000;
+    let pending = 32 * block;
     let client = Client(
-      xstream::Client::conn(xstream::Server::host_port(host, port), username, password).await?,
+      xstream::Client::conn(
+        xstream::Server::host_port(host, port),
+        username,
+        password,
+        Some(block),
+        pending as _,
+        "C",
+      )
+      .await?,
     );
     Ok(Python::with_gil(|_| client))
   })

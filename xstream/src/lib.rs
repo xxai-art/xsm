@@ -26,6 +26,9 @@ lazy_static! {
 #[derive(Clone)]
 pub struct Client {
   c: RedisClient,
+  block: Option<u64>,
+  pending: u32,
+  group: String,
 }
 
 impl Deref for Client {
@@ -36,9 +39,6 @@ impl Deref for Client {
   }
 }
 
-pub const BLOCK: Option<u64> = Some(60000);
-pub const PENDING: u32 = (BLOCK.unwrap() * 3) as u32;
-pub const GROUP: &str = "C";
 pub struct Server {
   c: ServerConfig,
 }
@@ -83,6 +83,9 @@ impl Client {
     server: impl Into<ServerConfig>,
     username: Option<String>,
     password: Option<String>,
+    block: Option<u64>,
+    pending: u32,
+    group: impl Into<String>,
   ) -> Result<Self> {
     let version = fred::types::RespVersion::RESP3;
     let mut conf = RedisConfig {
@@ -99,7 +102,12 @@ impl Client {
     // connect to the server, returning a handle to the task that drives the connection
     let _ = client.connect();
     client.wait_for_connect().await?;
-    Ok(Self { c: client })
+    Ok(Self {
+      c: client,
+      block,
+      pending,
+      group: group.into(),
+    })
   }
 
   pub async fn xpendclaim(
@@ -110,8 +118,8 @@ impl Client {
     if let Some(r) = self
       .fcall::<Option<Bytes>, _, _, _>(
         "xpendclaim",
-        vec![stream.into(), GROUP.into(), HOSTNAME.to_string()],
-        vec![PENDING, limit],
+        vec![stream.into(), self.group.clone(), HOSTNAME.to_string()],
+        vec![self.pending, limit],
       )
       .await?
     {
@@ -162,10 +170,10 @@ impl Client {
     match self
       .c
       .xreadgroup::<Vec<(Bytes, _)>, _, _, _, _>(
-        GROUP,
+        &self.group,
         hostname,
         count,
-        BLOCK,
+        self.block,
         false,
         stream,
         XID::NewInGroup,
@@ -174,19 +182,19 @@ impl Client {
     {
       Ok(mut r) => Ok(if let Some(r) = r.pop() { r.1 } else { None }),
       Err(err) => {
-        if err.kind() == &Unknown && err.details().starts_with("NOGROUP ") {
+        if err.kind() == &Unknown && err.details().starts_with("NOself.group ") {
           self
             .c
-            .xgroup_create(stream, GROUP, XID::Manual("0".into()), true)
+            .xgroup_create(stream, &self.group, XID::Manual("0".into()), true)
             .await?;
           return Ok(
             self
               .c
               .xreadgroup(
-                GROUP,
+                &self.group,
                 hostname,
                 count,
-                BLOCK,
+                self.block,
                 false,
                 stream,
                 XID::NewInGroup,
