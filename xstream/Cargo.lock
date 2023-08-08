@@ -460,6 +460,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "msgpacker-derive"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e926eca5ac0d976018120667ab61ee8a1cff4afdcd202357971b610e7ff57b5a"
+dependencies = [
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "nom"
 version = "7.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -985,4 +995,14 @@ dependencies = [
  "gethostname",
  "lazy_static",
  "tokio",
+ "xxai-msgpacker",
+]
+
+[[package]]
+name = "xxai-msgpacker"
+version = "0.4.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1a2a6f04d81672dac6180bd2ff1f8d3327463fcdd4c4b820578f87d542665fa0"
+dependencies = [
+ "msgpacker-derive",
 ]

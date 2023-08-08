@@ -1,5 +1,4 @@
 #![feature(lazy_cell)]
-
 use std::ops::Deref;
 
 use anyhow::Result;
@@ -16,6 +15,7 @@ pub use fred::{
 };
 use gethostname::gethostname;
 use lazy_static::lazy_static;
+use xxai_msgpacker::unpack_array;
 
 lazy_static! {
   pub static ref HOSTNAME: String = gethostname().into_string().unwrap();
@@ -103,16 +103,40 @@ impl Client {
     &self,
     stream: impl Into<String>,
     limit: u32,
-  ) -> Result<Option<bytes::Bytes>> {
-    Ok(
-      self
-        .fcall(
-          "xpendclaim",
-          vec![stream.into(), GROUP.into(), HOSTNAME.to_string()],
-          vec![(BLOCK.unwrap() * 3) as u32, limit],
-        )
-        .await?,
-    )
+  ) -> Result<Option<Vec<(u64, u64, u64, u64, u64)>>> {
+    if let Some(r) = self
+      .fcall::<Option<bytes::Bytes>, _, _, _>(
+        "xpendclaim",
+        vec![stream.into(), GROUP.into(), HOSTNAME.to_string()],
+        vec![(BLOCK.unwrap() * 3) as u32, limit],
+      )
+      .await?
+    {
+      if !r.is_empty() {
+        let b0 = r[0];
+        if b0 < 6 {
+          let end = (b0 + 1) as _;
+          let bin_len = &r[1..end];
+          let begin = end;
+          let end = begin + usize::from_le_bytes(bin_len.try_into().unwrap());
+
+          let (_, li): (_, Vec<u64>) = unpack_array(&r[begin..end])?;
+
+          let li = li
+            .chunks(5)
+            .map(|t| {
+              let [retry, t0, t1, klen, vlen] = t else {
+                unreachable!()
+              };
+              (*retry, *t0, *t1, *klen, *vlen)
+            })
+            .collect::<Vec<_>>();
+
+          return Ok(Some(li));
+        }
+      }
+    }
+    return Ok(None);
   }
 
   pub async fn xnext(

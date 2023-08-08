@@ -30,11 +30,20 @@ impl Client {
 
       Ok(Python::with_gil(|py| {
         if let Some(r) = r {
-          let r: PyObject = PyBytes::new(py, &r[..]).into();
-          r
-        } else {
-          py.None()
+          if !r.is_empty() {
+            let b0 = r[0];
+            if b0 < 6 {
+              let end = (b0 + 1) as _;
+              let bin_len = &r[1..end];
+              let begin = end;
+              let end = begin + usize::from_le_bytes(bin_len.try_into().unwrap());
+
+              let bin = &r[begin..end];
+              return PyBytes::new(py, &r).into();
+            }
+          }
         }
+        return py.None();
       }))
     })
   }
@@ -55,8 +64,8 @@ impl Client {
             .map(|(xid, kv)| {
               let mut args = Vec::with_capacity(kv.len());
               for (k, v) in kv {
-                let k: PyObject = PyBytes::new(py, &k[..]).into();
-                let v: PyObject = PyBytes::new(py, &v[..]).into();
+                let k: PyObject = PyBytes::new(py, &k).into();
+                let v: PyObject = PyBytes::new(py, &v).into();
                 args.push((k, v));
               }
               (xid, args)

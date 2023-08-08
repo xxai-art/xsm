@@ -12,3 +12,4 @@ fred = "6.3.0"
 gethostname = "0.4.3"
 lazy_static = "1.4.0"
 tokio = { version = "1.29.1", features = ["macros", "rt", "rt-multi-thread", "time"] }
+xxai-msgpacker = "0.4.4"
