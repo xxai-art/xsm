@@ -9,6 +9,8 @@ name = "xstream_py"
 crate-type = ["cdylib"]
 
 [dependencies]
+anyhow = "1.0.72"
+bytes = "1.4.0"
 pyo3 = { version = "0.19.2", features = ["anyhow"] }
 pyo3-asyncio = { version = "0.19.0", features = ["tokio", "tokio-runtime"] }
 tokio = { version = "1.29.1", features = [

@@ -1,4 +1,6 @@
 use pyo3::{prelude::*, types::PyBytes};
+use pyo3_asyncio::tokio::future_into_py;
+use xstream::{fred::interfaces::FunctionInterface, BLOCK, GROUP, HOSTNAME};
 
 #[pyclass]
 pub struct Client(xstream::Client);
@@ -21,6 +23,30 @@ fn server_host_port(
 
 #[pymethods]
 impl Client {
+  pub fn pending(self_: PyRef<'_, Self>, stream: String, limit: u64) -> PyResult<&PyAny> {
+    let py = self_.py();
+    let client = self_.0.clone();
+    future_into_py(py, async move {
+      let r: anyhow::Result<Option<bytes::Bytes>> = client
+        .fcall(
+          "xpendclaim",
+          vec![stream, GROUP.into(), HOSTNAME.to_string()],
+          vec![(BLOCK.unwrap() * 3) as u32, limit as u32],
+        )
+        .await
+        .into();
+
+      Ok(Python::with_gil(|py| {
+        if let Some(r) = r? {
+          let r: PyObject = PyBytes::new(py, &r[..]).into();
+          r
+        } else {
+          py.None()
+        }
+      }))
+    })
+  }
+
   pub fn xnext(
     self_: PyRef<'_, Self>,
     key: String,
@@ -28,7 +54,7 @@ impl Client {
   ) -> PyResult<&PyAny> {
     let py = self_.py();
     let client = self_.0.clone();
-    pyo3_asyncio::tokio::future_into_py(py, async move {
+    future_into_py(py, async move {
       let li = client.xnext(key, count).await?;
 
       Ok(Python::with_gil(|py| {
@@ -52,7 +78,7 @@ impl Client {
   }
 }
 // fn sleep_for(py: Python<'_>) -> PyResult<&PyAny> {
-//   pyo3_asyncio::tokio::future_into_py(py, async {
+//   future_into_py(py, async {
 //     tokio::time::sleep(std::time::Duration::from_secs(3)).await;
 //     Ok(Python::with_gil(|py| py.None()))
 //   })
