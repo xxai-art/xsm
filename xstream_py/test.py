@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from msgpack import unpackb
 from xstream_py import server_host_port
 import asyncio
 from os import getenv
@@ -12,7 +13,7 @@ async def main():
                                   getenv('REDIS_PASSWORD'))
 
   for xid, [(id, args)] in await server.xnext("iaa", 32):
-    print(xid, id, args)
+    print(xid, unpackb(id), unpackb(args))
 
 
 asyncio.run(main())

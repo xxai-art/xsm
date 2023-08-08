@@ -1,5 +1,7 @@
 #![feature(lazy_cell)]
 
+use std::ops::Deref;
+
 use anyhow::Result;
 use bytes::Bytes;
 pub use fred::{
@@ -20,6 +22,14 @@ lazy_static! {
 #[derive(Clone)]
 pub struct Client {
   c: RedisClient,
+}
+
+impl Deref for Client {
+  type Target = RedisClient;
+
+  fn deref(&self) -> &Self::Target {
+    &self.c
+  }
 }
 
 const BLOCK: Option<u64> = Some(60000);
