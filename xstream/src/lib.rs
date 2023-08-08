@@ -91,7 +91,7 @@ impl Client {
     &self,
     key: impl AsRef<str>,
     count: u64, // 获取的数量
-  ) -> Result<Vec<(String, Vec<(Bytes, Bytes)>)>> {
+  ) -> Result<Option<Vec<(String, Vec<(Vec<u8>, Vec<u8>)>)>>> {
     let key = key.as_ref();
     let count = Some(count);
     let hostname = &*HOSTNAME;
@@ -109,12 +109,7 @@ impl Client {
       )
       .await
     {
-      Ok(mut r) => Ok(if r.is_empty() {
-        vec![]
-      } else {
-        let r = r.pop().unwrap();
-        r.1
-      }),
+      Ok(mut r) => Ok(if let Some(r) = r.pop() { r.1 } else { None }),
       Err(err) => {
         if err.kind() == &Unknown && err.details().starts_with("NOGROUP ") {
           self
