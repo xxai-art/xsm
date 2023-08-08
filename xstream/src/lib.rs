@@ -17,6 +17,7 @@ lazy_static! {
   pub static ref HOSTNAME: String = gethostname().into_string().unwrap();
 }
 
+#[derive(Clone)]
 pub struct Client {
   c: RedisClient,
 }
@@ -90,17 +91,30 @@ impl Client {
     &self,
     key: impl AsRef<str>,
     count: u64, // 获取的数量
-  ) -> Result<Vec<(Bytes, Vec<(String, Vec<(Bytes, Bytes)>)>)>> {
+  ) -> Result<Vec<(String, Vec<(Bytes, Bytes)>)>> {
     let key = key.as_ref();
     let count = Some(count);
     let hostname = &*HOSTNAME;
 
     match self
       .c
-      .xreadgroup(GROUP, hostname, count, BLOCK, false, key, XID::NewInGroup)
+      .xreadgroup::<Vec<(Bytes, _)>, _, _, _, _>(
+        GROUP,
+        hostname,
+        count,
+        BLOCK,
+        false,
+        key,
+        XID::NewInGroup,
+      )
       .await
     {
-      Ok(r) => Ok(r),
+      Ok(mut r) => Ok(if r.is_empty() {
+        vec![]
+      } else {
+        let r = r.pop().unwrap();
+        r.1
+      }),
       Err(err) => {
         if err.kind() == &Unknown && err.details().starts_with("NOGROUP ") {
           self

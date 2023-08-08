@@ -19,22 +19,22 @@ fn server_host_port(
   })
 }
 
-// #[pymethods]
-// impl Client {
-//   pub fn xnext(
-//     &self,
-//     py: Python<'_>,
-//     key: String,
-//     count: u64, // 获取的数量
-//   ) -> PyResult<&PyAny> {
-//     pyo3_asyncio::tokio::future_into_py(py, async move {
-//       let r = self.0.xnext(key, count).await;
-//       dbg!(r);
-//
-//       Ok(Python::with_gil(|_| 1234))
-//     })
-//   }
-// }
+#[pymethods]
+impl Client {
+  pub fn xnext(
+    self_: PyRef<'_, Self>,
+    key: String,
+    count: u64, // 获取的数量
+  ) -> PyResult<&PyAny> {
+    let py = self_.py();
+    let client = self_.0.clone();
+    pyo3_asyncio::tokio::future_into_py(py, async move {
+      let r = client.xnext(key, count).await?;
+
+      Ok(Python::with_gil(|_| r))
+    })
+  }
+}
 // fn sleep_for(py: Python<'_>) -> PyResult<&PyAny> {
 //   pyo3_asyncio::tokio::future_into_py(py, async {
 //     tokio::time::sleep(std::time::Duration::from_secs(3)).await;
