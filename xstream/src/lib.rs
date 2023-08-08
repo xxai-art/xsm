@@ -111,8 +111,7 @@ impl Client {
       .fcall::<Option<Bytes>, _, _, _>(
         "xpendclaim",
         vec![stream.into(), GROUP.into(), HOSTNAME.to_string()],
-        vec![0, limit],
-        //vec![PENDING, limit],
+        vec![PENDING, limit],
       )
       .await?
     {

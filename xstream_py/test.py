@@ -14,8 +14,11 @@ async def main():
 
   stream = "iaa"
   limit = 32
-  r = await server.xpendclaim(stream, limit)
-  print('xpendclaim', r)
+  for retry, t0, t1, id, args in await server.xpendclaim(stream, limit):
+    id = unpackb(id)
+    args = unpackb(args)
+    print(f"{retry} {t0}-{t1} {id} {args}")
+
   for xid, [(id, args)] in await server.xnext(stream, limit):
     print(xid, unpackb(id), unpackb(args))
 
