@@ -7,11 +7,11 @@ pub struct Server {
   s: xstream::Server,
 }
 
-pub fn server_host_port(host: String, port: u16) -> Server {
-  Server(xstream::Server::host_port(host, port))
+#[pyfunction]
+pub fn server_host_port(host: String, port: u16) -> PyResult<Server> {
+  Ok(Server(xstream::Server::host_port(host, port)))
 }
 
-// #[pyfunction]
 // fn sleep_for(py: Python<'_>) -> PyResult<&PyAny> {
 //   pyo3_asyncio::tokio::future_into_py(py, async {
 //     tokio::time::sleep(std::time::Duration::from_secs(3)).await;
