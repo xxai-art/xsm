@@ -12,7 +12,10 @@ async def main():
   server = await server_host_port(host, int(port), 'default',
                                   getenv('REDIS_PASSWORD'))
 
-  for xid, [(id, args)] in await server.xnext("iaa", 32):
+  stream = "iaa"
+  limit = 32
+  print('xpendclaim', await server.xpendclaim(stream, limit))
+  for xid, [(id, args)] in await server.xnext(stream, limit):
     print(xid, unpackb(id), unpackb(args))
 
 

@@ -1,6 +1,5 @@
 use pyo3::{prelude::*, types::PyBytes};
 use pyo3_asyncio::tokio::future_into_py;
-use xstream::{fred::interfaces::FunctionInterface, BLOCK, GROUP, HOSTNAME};
 
 #[pyclass]
 pub struct Client(xstream::Client);
@@ -23,7 +22,7 @@ fn server_host_port(
 
 #[pymethods]
 impl Client {
-  pub fn pending(self_: PyRef<'_, Self>, stream: String, limit: u32) -> PyResult<&PyAny> {
+  pub fn xpendclaim(self_: PyRef<'_, Self>, stream: String, limit: u32) -> PyResult<&PyAny> {
     let py = self_.py();
     let client = self_.0.clone();
     future_into_py(py, async move {
