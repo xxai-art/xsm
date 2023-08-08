@@ -123,8 +123,8 @@ impl Client {
           let end = b0 + 1;
           let mut bin_len = [0u8; 8];
           bin_len[..b0].copy_from_slice(&r[1..end]);
-          let begin = end;
-          let end = begin + usize::from_le_bytes(bin_len);
+          let mut begin = end;
+          let mut end = begin + usize::from_le_bytes(bin_len);
 
           let (_, li): (_, Vec<u64>) = unpack_array(&r[begin..end])?;
 
@@ -134,8 +134,8 @@ impl Client {
               let [retry, t0, t1, klen, vlen] = t else {
                 unreachable!()
               };
-              let begin = end;
-              let end = end + klen;
+              begin = end;
+              end = end + klen;
               (*retry, *t0, *t1, *klen, *vlen)
             })
             .collect::<Vec<_>>();
