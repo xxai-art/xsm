@@ -2,120 +2,120 @@
 
 use anyhow::Result;
 use bytes::Bytes;
-use fred::{
-    interfaces::{ClientLike, StreamsInterface},
-    prelude::{
-        PerformanceConfig, ReconnectPolicy, RedisClient, RedisConfig, RedisErrorKind::Unknown,
-        ServerConfig,
-    },
-    types::XID,
+pub use fred::{
+  interfaces::{ClientLike, StreamsInterface},
+  prelude::{
+    PerformanceConfig, ReconnectPolicy, RedisClient, RedisConfig, RedisErrorKind::Unknown,
+    ServerConfig,
+  },
+  types::XID,
 };
 use gethostname::gethostname;
 use lazy_static::lazy_static;
 
 lazy_static! {
-    pub static ref HOSTNAME: String = gethostname().into_string().unwrap();
+  pub static ref HOSTNAME: String = gethostname().into_string().unwrap();
 }
 
 pub struct Client {
-    c: RedisClient,
+  c: RedisClient,
 }
 
 const BLOCK: Option<u64> = Some(60000);
 const GROUP: &str = "C";
 pub struct Server {
-    c: ServerConfig,
+  c: ServerConfig,
 }
 
 impl Server {
-    pub fn cluster(host_port_li: Vec<(String, u16)>) -> Self {
-        Self {
-            c: ServerConfig::Clustered {
-                hosts: host_port_li
-                    .into_iter()
-                    .map(|(host, port)| fred::types::Server {
-                        host: host.into(),
-                        port,
-                        tls_server_name: None,
-                    })
-                .collect(),
-            },
-        }
+  pub fn cluster(host_port_li: Vec<(String, u16)>) -> Self {
+    Self {
+      c: ServerConfig::Clustered {
+        hosts: host_port_li
+          .into_iter()
+          .map(|(host, port)| fred::types::Server {
+            host: host.into(),
+            port,
+            tls_server_name: None,
+          })
+          .collect(),
+      },
     }
+  }
 
-    pub fn host_port(host: String, port: u16) -> Self {
-        Self {
-            c: ServerConfig::Centralized {
-                server: fred::types::Server {
-                    host: host.into(),
-                    port,
-                    tls_server_name: None,
-                },
-            },
-        }
+  pub fn host_port(host: String, port: u16) -> Self {
+    Self {
+      c: ServerConfig::Centralized {
+        server: fred::types::Server {
+          host: host.into(),
+          port,
+          tls_server_name: None,
+        },
+      },
     }
+  }
 }
 
 impl From<Server> for ServerConfig {
-    fn from(s: Server) -> Self {
-        s.c
-    }
+  fn from(s: Server) -> Self {
+    s.c
+  }
 }
 
 impl Client {
-    pub async fn conn(
-        server: impl Into<ServerConfig>,
-        username: Option<String>,
-        password: Option<String>,
-    ) -> Result<Self> {
-        let version = fred::types::RespVersion::RESP3;
-        let mut conf = RedisConfig {
-            version,
-            ..Default::default()
-        };
-        conf.server = server.into();
-        conf.username = username;
-        conf.password = password;
-        let perf = PerformanceConfig::default();
-        let policy = ReconnectPolicy::default();
-        let client = RedisClient::new(conf, Some(perf), Some(policy));
+  pub async fn conn(
+    server: impl Into<ServerConfig>,
+    username: Option<String>,
+    password: Option<String>,
+  ) -> Result<Self> {
+    let version = fred::types::RespVersion::RESP3;
+    let mut conf = RedisConfig {
+      version,
+      ..Default::default()
+    };
+    conf.server = server.into();
+    conf.username = username;
+    conf.password = password;
+    let perf = PerformanceConfig::default();
+    let policy = ReconnectPolicy::default();
+    let client = RedisClient::new(conf, Some(perf), Some(policy));
 
-        // connect to the server, returning a handle to the task that drives the connection
-        let _ = client.connect();
-        client.wait_for_connect().await?;
-        Ok(Self { c: client })
-    }
+    // connect to the server, returning a handle to the task that drives the connection
+    let _ = client.connect();
+    client.wait_for_connect().await?;
+    Ok(Self { c: client })
+  }
 
-    pub async fn xnext(
-        &self,
-        key: impl AsRef<str>,
-        count: u64, // 获取的数量
-    ) -> Result<Vec<(Bytes, Vec<(String, Vec<(Bytes, Bytes)>)>)>> {
-        let key = key.as_ref();
-        let count = Some(count);
-        let hostname = &*HOSTNAME;
+  pub async fn xnext(
+    &self,
+    key: impl AsRef<str>,
+    count: u64, // 获取的数量
+  ) -> Result<Vec<(Bytes, Vec<(String, Vec<(Bytes, Bytes)>)>)>> {
+    let key = key.as_ref();
+    let count = Some(count);
+    let hostname = &*HOSTNAME;
 
-        match self
+    match self
+      .c
+      .xreadgroup(GROUP, hostname, count, BLOCK, false, key, XID::NewInGroup)
+      .await
+    {
+      Ok(r) => Ok(r),
+      Err(err) => {
+        if err.kind() == &Unknown && err.details().starts_with("NOGROUP ") {
+          self
             .c
-            .xreadgroup(GROUP, hostname, count, BLOCK, false, key, XID::NewInGroup)
-            .await
-            {
-                Ok(r) => Ok(r),
-                Err(err) => {
-                    if err.kind() == &Unknown && err.details().starts_with("NOGROUP ") {
-                        self
-                            .c
-                            .xgroup_create(key, GROUP, XID::Manual("0".into()), true)
-                            .await?;
-                        return Ok(
-                            self
-                            .c
-                            .xreadgroup(GROUP, hostname, count, BLOCK, false, key, XID::NewInGroup)
-                            .await?,
-                        );
-                    }
-                    Err(err.into())
-                }
-            }
+            .xgroup_create(key, GROUP, XID::Manual("0".into()), true)
+            .await?;
+          return Ok(
+            self
+              .c
+              .xreadgroup(GROUP, hostname, count, BLOCK, false, key, XID::NewInGroup)
+              .await?,
+          );
+        }
+        Err(err.into())
+      }
     }
+  }
 }
