@@ -28,7 +28,17 @@ impl Client {
     future_into_py(py, async move {
       let r = client.xpendclaim(stream, limit).await?;
 
-      Ok(Python::with_gil(|py| r))
+      Ok(Python::with_gil(|py| {
+        r.map_or(vec![], |li| {
+          li.into_iter()
+            .map(|(retry, t0, t1, id, msg)| {
+              let id: PyObject = PyBytes::new(py, &id).into();
+              let msg: PyObject = PyBytes::new(py, &msg).into();
+              (retry, t0, t1, id, msg)
+            })
+            .collect::<Vec<_>>()
+        })
+      }))
     })
   }
 

@@ -106,9 +106,9 @@ impl Client {
     &self,
     stream: impl Into<String>,
     limit: u32,
-  ) -> Result<Option<Vec<(u64, u64, u64, u64, u64)>>> {
+  ) -> Result<Option<Vec<(u64, u64, u64, Vec<u8>, Vec<u8>)>>> {
     if let Some(r) = self
-      .fcall::<Option<bytes::Bytes>, _, _, _>(
+      .fcall::<Option<Bytes>, _, _, _>(
         "xpendclaim",
         vec![stream.into(), GROUP.into(), HOSTNAME.to_string()],
         vec![0, limit],
@@ -135,8 +135,12 @@ impl Client {
                 unreachable!()
               };
               begin = end;
-              end = end + klen;
-              (*retry, *t0, *t1, *klen, *vlen)
+              end += (*klen) as usize;
+              let key = r[begin..end].to_vec();
+              begin = end;
+              end += (*vlen) as usize;
+              let val = r[begin..end].to_vec();
+              (*retry, *t0, *t1, key, val)
             })
             .collect::<Vec<_>>();
 
