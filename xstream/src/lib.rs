@@ -134,6 +134,8 @@ impl Client {
               let [retry, t0, t1, klen, vlen] = t else {
                 unreachable!()
               };
+              let begin = end;
+              let end = end + klen;
               (*retry, *t0, *t1, *klen, *vlen)
             })
             .collect::<Vec<_>>();
