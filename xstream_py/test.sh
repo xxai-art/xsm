@@ -5,4 +5,4 @@ cd $DIR
 set -ex
 
 maturin develop
-./test.py
+exec direnv exec . ./test.py
