@@ -3,7 +3,7 @@ name = "xsm"
 edition = "2021"
 version = "0.1.0"
 license = "SSPL-1.0"
-homepage = "https://github.com/xxai-art/xstream"
+homepage = "https://github.com/xxai-art/xsm"
 description = "redis stream for rust"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
