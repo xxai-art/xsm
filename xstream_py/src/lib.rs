@@ -38,6 +38,22 @@ impl Client {
   pub fn stream(&self, name: String) -> Stream {
     Stream(self.0.stream(name))
   }
+  // redis.xadd(
+  // stream
+  // [
+  //   [
+  //     pack id
+  //     pack args
+  //   ]
+  // ]
+  pub fn xadd(self_: PyRef<'_, Self>, stream: String, val: PyBytes) -> PyResult<&PyAny> {
+    let py = self_.py();
+    let c = self_.0.clone();
+    future_into_py(py, async move {
+      c.xadd(stream, false, Some(()), XID::Auto, val).await?;
+      Ok(Python::with_gil(|py| py.None()))
+    })
+  }
 }
 
 #[pymethods]
