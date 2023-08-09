@@ -23,13 +23,13 @@ def _func(func):
   return _
 
 
-async def _run(func):
+async def _run(stream, func):
   host_port = getenv('REDIS_HOST_PORT')
   host, port = host_port.split(':')
   server = await server_host_port(host, int(port), 'default',
                                   getenv('REDIS_PASSWORD'))
   # server.xadd('iaa', 2, packb([]))
-  stream = server.stream("iaa")
+  stream = server.stream(stream)
   limit = 32
   while True:
     for retry, xid, id, args in await stream.xpendclaim(limit):
@@ -42,5 +42,5 @@ async def _run(func):
       await func(stream, xid, server, id, args)
 
 
-def run(func):
-  asyncio.run(_run(_func(func)))
+def run(stream, func):
+  asyncio.run(_run(stream, _func(func)))

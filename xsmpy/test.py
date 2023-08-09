@@ -3,9 +3,9 @@
 from xsmpy import run
 
 
-async def task(redis, id, *args):
+async def task(sredis, id, *args):
   print(id, args)
   return
 
 
-run(task)
+run('iaa', task)
