@@ -1,34 +1,46 @@
 #!/usr/bin/env python
 
+from sys import stderr
 from msgpack import unpackb
 from xsmpy.xsmpy import server_host_port
 import asyncio
 from os import getenv
+import traceback
 
 
-async def _run():
+def _func(func):
+
+  async def _(stream, xid, server, id, args):
+    try:
+      id = unpackb(id)
+      args = unpackb(args)
+      await func(id, server, *args)
+      await stream.xackdel(xid)
+    except Exception:
+      traceback.print_exc()
+      print(xid, id, args, file=stderr)
+
+  return _
+
+
+async def _run(func):
   host_port = getenv('REDIS_HOST_PORT')
   host, port = host_port.split(':')
   server = await server_host_port(host, int(port), 'default',
                                   getenv('REDIS_PASSWORD'))
-  print('connected')
   # server.xadd('iaa', 2, packb([]))
   stream = server.stream("iaa")
   limit = 32
   while True:
-    for retry, task_id, id, args in await stream.xpendclaim(limit):
-      id = unpackb(id)
-      args = unpackb(args)
+    for retry, xid, id, args in await stream.xpendclaim(limit):
       if retry > 6:
-        print(f"failed {retry} {task_id} {id} {args}")
-        await stream.xackdel(task_id)
+        await stream.xackdel(xid)
         continue
-      print(f"{retry} {task_id} {id} {args}")
+      await func(stream, xid, server, id, args)
 
-    print('xnext')
     for xid, [(id, args)] in await stream.xnext(limit):
-      print(xid, unpackb(id), unpackb(args))
+      await func(stream, xid, server, id, args)
 
 
-def run():
-  asyncio.run(_run())
+def run(func):
+  asyncio.run(_run(_func(func)))

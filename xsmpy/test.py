@@ -2,4 +2,10 @@
 
 from xsmpy import run
 
-run()
+
+async def task(redis, id, *args):
+  print(id, args)
+  return
+
+
+run(task)
