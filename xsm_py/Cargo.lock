@@ -1114,7 +1114,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "xsm_py"
+name = "xsmpy"
 version = "0.1.0"
 dependencies = [
  "anyhow",
