@@ -17,6 +17,7 @@ pub use fred::{
 };
 use gethostname::gethostname;
 use lazy_static::lazy_static;
+use rand::Rng;
 use xxai_msgpacker::unpack_array;
 
 lazy_static! {
@@ -110,11 +111,11 @@ impl Client {
     })
   }
 
-  pub async fn xclean(&self, stream: impl Into<String>) -> Result<()> {
+  pub async fn xclean(&self, stream: impl AsRef<str>) -> Result<()> {
     self
       .fcall::<Option<Bytes>, _, _, _>(
         "xconsumerclean",
-        vec![stream.into(), self.group.clone()],
+        vec![stream.as_ref(), &self.group],
         vec![604800000],
       )
       .await?;
@@ -126,10 +127,14 @@ impl Client {
     stream: impl Into<String>,
     limit: u32,
   ) -> Result<Option<Vec<(u64, u64, u64, Vec<u8>, Vec<u8>)>>> {
+    let stream = stream.into();
+    if 0 == rand::thread_rng().gen_range(0..1440) {
+      self.xclean(&stream).await?;
+    }
     if let Some(r) = self
       .fcall::<Option<Bytes>, _, _, _>(
         "xpendclaim",
-        vec![stream.into(), self.group.clone(), HOSTNAME.to_string()],
+        vec![&stream, &self.group, &HOSTNAME],
         vec![self.pending, limit],
       )
       .await?

@@ -994,6 +994,7 @@ dependencies = [
  "fred",
  "gethostname",
  "lazy_static",
+ "rand",
  "tokio",
  "xxai-msgpacker",
 ]
