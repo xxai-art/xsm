@@ -3,8 +3,9 @@
 from xsmpy import run
 
 
-async def task(sredis, id, *args):
+async def task(id, *args):
   print(id, args)
+  # return 'clip', id
   return
 
 
