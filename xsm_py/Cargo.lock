@@ -1100,6 +1100,8 @@ checksum = "1a515f5799fe4961cb532f983ce2b23082366b898e52ffbce459c86f67c8378a"
 [[package]]
 name = "xsm"
 version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1215d180586f29f06c0b8277091423c1c5924b0749b4a8db79bdd42b8624748"
 dependencies = [
  "anyhow",
  "bytes",

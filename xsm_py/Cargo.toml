@@ -1,5 +1,5 @@
 [package]
-name = "xsmer"
+name = "xsm_py"
 version = "0.1.0"
 edition = "2021"
 
@@ -19,5 +19,5 @@ tokio = { version = "1.29.1", features = [
   "rt-multi-thread",
   "time"
 ] }
-rs_xsm = { version = "0.1.1", package = "xsm" }
-# rs_xsm = { path = "../xsm", version = "0.1.1", package = "xsm" }
+# rs_xsm = { version = "0.1.1", package = "xsm" }
+rs_xsm = { path = "../xsm", version = "0.1.1", package = "xsm" }
