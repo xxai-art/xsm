@@ -12,6 +12,7 @@ async def main():
   server = await server_host_port(host, int(port), 'default',
                                   getenv('REDIS_PASSWORD'))
 
+  # server.xadd('iaa', 2, packb([]))
   stream = server.stream("iaa")
   limit = 32
   while True:
