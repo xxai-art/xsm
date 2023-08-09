@@ -18,8 +18,11 @@ async def main():
     for retry, task_id, id, args in await stream.xpendclaim(limit):
       id = unpackb(id)
       args = unpackb(args)
-      await stream.xackdel(task_id)
-      print(f"retry {retry} {task_id} {id} {args}")
+      if retry > 6:
+        print(f"failed {retry} {task_id} {id} {args}")
+        await stream.xackdel(task_id)
+        continue
+      print(f"{retry} {task_id} {id} {args}")
 
     print('xnext')
     for xid, [(id, args)] in await stream.xnext(limit):
