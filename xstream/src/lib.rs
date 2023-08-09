@@ -32,6 +32,7 @@ pub struct Client {
   group: String,
 }
 
+#[derive(Clone)]
 pub struct Stream {
   c: Client,
   name: String,
@@ -202,10 +203,8 @@ impl Stream {
 
   pub async fn xnext(
     &self,
-    stream: impl AsRef<str>,
     count: u64, // 获取的数量
   ) -> Result<Option<Vec<(String, Vec<(Bytes, Bytes)>)>>> {
-    let stream = stream.as_ref();
     let count = Some(count);
     let hostname = &*HOSTNAME;
 
@@ -217,7 +216,7 @@ impl Stream {
         count,
         self.c.block,
         false,
-        stream,
+        &self.name,
         XID::NewInGroup,
       )
       .await
@@ -227,7 +226,7 @@ impl Stream {
         if err.kind() == &Unknown && err.details().starts_with("NOGROUP ") {
           self
             .c
-            .xgroup_create(stream, &self.c.group, XID::Manual("0".into()), true)
+            .xgroup_create(&self.name, &self.c.group, XID::Manual("0".into()), true)
             .await?;
           return Ok(
             self
@@ -238,7 +237,7 @@ impl Stream {
                 count,
                 self.c.block,
                 false,
-                stream,
+                &self.name,
                 XID::NewInGroup,
               )
               .await?,

@@ -4,6 +4,9 @@ use pyo3_asyncio::tokio::future_into_py;
 #[pyclass]
 pub struct Client(xstream::Client);
 
+#[pyclass]
+pub struct Stream(xstream::Stream);
+
 #[pyfunction]
 fn server_host_port(
   py: Python<'_>,
@@ -32,21 +35,28 @@ fn server_host_port(
 
 #[pymethods]
 impl Client {
-  pub fn xackdel(self_: PyRef<'_, Self>, stream: String, task_id: String) -> PyResult<&PyAny> {
+  pub fn stream(&self, name: String) -> Stream {
+    Stream(self.0.stream(name))
+  }
+}
+
+#[pymethods]
+impl Stream {
+  pub fn xackdel(self_: PyRef<'_, Self>, task_id: String) -> PyResult<&PyAny> {
     let py = self_.py();
-    let client = self_.0.clone();
+    let c = self_.0.clone();
     future_into_py(py, async move {
-      client.xackdel(stream, task_id).await?;
+      c.xackdel(task_id).await?;
 
       Ok(Python::with_gil(|py| py.None()))
     })
   }
 
-  pub fn xpendclaim(self_: PyRef<'_, Self>, stream: String, limit: u32) -> PyResult<&PyAny> {
+  pub fn xpendclaim(self_: PyRef<'_, Self>, limit: u32) -> PyResult<&PyAny> {
     let py = self_.py();
-    let client = self_.0.clone();
+    let c = self_.0.clone();
     future_into_py(py, async move {
-      let r = client.xpendclaim(stream, limit).await?;
+      let r = c.xpendclaim(limit).await?;
 
       Ok(Python::with_gil(|py| {
         r.map_or(vec![], |li| {
@@ -64,13 +74,12 @@ impl Client {
 
   pub fn xnext(
     self_: PyRef<'_, Self>,
-    key: String,
-    count: u64, // 获取的数量
+    limit: u64, // 获取的数量
   ) -> PyResult<&PyAny> {
     let py = self_.py();
     let client = self_.0.clone();
     future_into_py(py, async move {
-      let li = client.xnext(key, count).await?;
+      let li = client.xnext(limit).await?;
 
       Ok(Python::with_gil(|py| {
         if let Some(li) = li {
