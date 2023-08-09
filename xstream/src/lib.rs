@@ -110,6 +110,17 @@ impl Client {
     })
   }
 
+  pub async fn xclean(&self, stream: impl Into<String>) -> Result<()> {
+    self
+      .fcall::<Option<Bytes>, _, _, _>(
+        "xconsumerclean",
+        vec![stream.into(), self.group.clone()],
+        vec![604800000],
+      )
+      .await?;
+    Ok(())
+  }
+
   pub async fn xpendclaim(
     &self,
     stream: impl Into<String>,
