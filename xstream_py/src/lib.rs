@@ -32,6 +32,16 @@ fn server_host_port(
 
 #[pymethods]
 impl Client {
+  pub fn xackdel(self_: PyRef<'_, Self>, stream: String, task_id: String) -> PyResult<&PyAny> {
+    let py = self_.py();
+    let client = self_.0.clone();
+    future_into_py(py, async move {
+      client.xackdel(stream, task_id).await?;
+
+      Ok(Python::with_gil(|py| py.None()))
+    })
+  }
+
   pub fn xpendclaim(self_: PyRef<'_, Self>, stream: String, limit: u32) -> PyResult<&PyAny> {
     let py = self_.py();
     let client = self_.0.clone();
@@ -44,7 +54,7 @@ impl Client {
             .map(|(retry, t0, t1, id, msg)| {
               let id: PyObject = PyBytes::new(py, &id).into();
               let msg: PyObject = PyBytes::new(py, &msg).into();
-              (retry, t0, t1, id, msg)
+              (retry, format!("{t0}-{t1}"), id, msg)
             })
             .collect::<Vec<_>>()
         })

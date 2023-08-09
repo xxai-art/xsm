@@ -15,10 +15,11 @@ async def main():
   stream = "iaa"
   limit = 32
   while True:
-    for retry, t0, t1, id, args in await server.xpendclaim(stream, limit):
+    for retry, task_id, id, args in await server.xpendclaim(stream, limit):
       id = unpackb(id)
       args = unpackb(args)
-      print(f"retry {retry} {t0}-{t1} {id} {args}")
+      await server.xackdel(stream, task_id)
+      print(f"retry {retry} {task_id} {id} {args}")
 
     print('xnext')
     for xid, [(id, args)] in await server.xnext(stream, limit):
