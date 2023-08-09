@@ -1,10 +1,11 @@
 [package]
 name = "xstream"
 version = "0.1.0"
-edition = "2021"
+license = "SSPL-1.0"
+homepage = "https://github.com/xxai-art/xstream"
+description = "redis stream for rust"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 anyhow = "1.0.72"
 bytes = "1.4.0"
@@ -12,5 +13,10 @@ fred = "6.3.0"
 gethostname = "0.4.3"
 lazy_static = "1.4.0"
 rand = "0.8.5"
-tokio = { version = "1.29.1", features = ["macros", "rt", "rt-multi-thread", "time"] }
+tokio = { version = "1.29.1", features = [
+  "macros",
+  "rt",
+  "rt-multi-thread",
+  "time"
+] }
 xxai-msgpacker = "0.4.4"
