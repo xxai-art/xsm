@@ -46,11 +46,12 @@ impl Client {
   //     pack args
   //   ]
   // ]
-  pub fn xadd(self_: PyRef<'_, Self>, stream: String, val: PyBytes) -> PyResult<&PyAny> {
+  pub fn xadd(self_: PyRef<'_, Self>, stream: String, id: u64, val: PyBytes) -> PyResult<&PyAny> {
     let py = self_.py();
     let c = self_.0.clone();
     future_into_py(py, async move {
-      c.xadd(stream, false, Some(()), XID::Auto, val).await?;
+      c.xadd(stream, false, Some(()), XID::Auto, vec![(id, val)])
+        .await?;
       Ok(Python::with_gil(|py| py.None()))
     })
   }
