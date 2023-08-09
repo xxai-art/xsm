@@ -1,6 +1,6 @@
 use pyo3::{prelude::*, types::PyBytes};
 use pyo3_asyncio::tokio::future_into_py;
-use xstream::{xxai_msgpacker::Packable, StreamsInterface, XID};
+use xstream::{xxai_msgpacker::Packable, StreamsInterface};
 
 #[pyclass]
 pub struct Client(xstream::Client);
