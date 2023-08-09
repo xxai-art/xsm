@@ -14,7 +14,7 @@ def _func(func):
     try:
       id = unpackb(id)
       args = unpackb(args)
-      await func(id, server, *args)
+      await func(server, id, *args)
       await stream.xackdel(xid)
     except Exception:
       traceback.print_exc()
