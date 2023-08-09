@@ -119,18 +119,6 @@ impl Stream {
     })
   }
 }
-// fn sleep_for(py: Python<'_>) -> PyResult<&PyAny> {
-//   future_into_py(py, async {
-//     tokio::time::sleep(std::time::Duration::from_secs(3)).await;
-//     Ok(Python::with_gil(|py| py.None()))
-//   })
-// }
-//
-// /// Formats the sum of two numbers as string.
-// #[pyfunction]
-// fn sum_as_string(a: usize, b: usize) -> PyResult<String> {
-//   Ok((a + b).to_string())
-// }
 
 /// A Python module implemented in Rust.
 #[pymodule]
