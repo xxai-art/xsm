@@ -1114,7 +1114,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "xsmer"
+name = "xsm_py"
 version = "0.1.0"
 dependencies = [
  "anyhow",
