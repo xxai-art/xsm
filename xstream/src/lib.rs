@@ -32,6 +32,11 @@ pub struct Client {
   group: String,
 }
 
+pub struct Stream {
+  c: Client,
+  name: String,
+}
+
 impl Deref for Client {
   type Target = RedisClient;
 
@@ -111,22 +116,33 @@ impl Client {
     })
   }
 
-  pub async fn xclean(&self, stream: impl AsRef<str>) -> Result<()> {
+  pub fn stream(&self, name: String) -> Stream {
+    Stream {
+      c: self.clone(),
+      name,
+    }
+  }
+}
+
+impl Stream {
+  pub async fn xclean(&self) -> Result<()> {
     self
+      .c
       .fcall::<Option<Bytes>, _, _, _>(
         "xconsumerclean",
-        vec![stream.as_ref(), &self.group],
+        vec![&self.name, &self.c.group],
         vec![604800000],
       )
       .await?;
     Ok(())
   }
 
-  pub async fn xackdel(&self, stream: impl AsRef<str>, task_id: impl AsRef<str>) -> Result<()> {
+  pub async fn xackdel(&self, task_id: impl AsRef<str>) -> Result<()> {
     self
+      .c
       .fcall::<Option<Bytes>, _, _, _>(
         "xackdel",
-        vec![stream.as_ref(), &self.group],
+        vec![&self.name, &self.c.group],
         vec![task_id.as_ref()],
       )
       .await?;
@@ -135,18 +151,17 @@ impl Client {
 
   pub async fn xpendclaim(
     &self,
-    stream: impl Into<String>,
     limit: u32,
   ) -> Result<Option<Vec<(u64, u64, u64, Vec<u8>, Vec<u8>)>>> {
-    let stream = stream.into();
     if 0 == rand::thread_rng().gen_range(0..7 * 24 * 60) {
-      self.xclean(&stream).await?;
+      self.xclean().await?;
     }
     if let Some(r) = self
+      .c
       .fcall::<Option<Bytes>, _, _, _>(
         "xpendclaim",
-        vec![&stream, &self.group, &HOSTNAME],
-        vec![self.pending, limit],
+        vec![&self.name, &self.c.group, &HOSTNAME],
+        vec![self.c.pending, limit],
       )
       .await?
     {
@@ -197,10 +212,10 @@ impl Client {
     match self
       .c
       .xreadgroup::<Vec<(Bytes, _)>, _, _, _, _>(
-        &self.group,
+        &self.c.group,
         hostname,
         count,
-        self.block,
+        self.c.block,
         false,
         stream,
         XID::NewInGroup,
@@ -209,19 +224,19 @@ impl Client {
     {
       Ok(mut r) => Ok(if let Some(r) = r.pop() { r.1 } else { None }),
       Err(err) => {
-        if err.kind() == &Unknown && err.details().starts_with("NOself.group ") {
+        if err.kind() == &Unknown && err.details().starts_with("NOGROUP ") {
           self
             .c
-            .xgroup_create(stream, &self.group, XID::Manual("0".into()), true)
+            .xgroup_create(stream, &self.c.group, XID::Manual("0".into()), true)
             .await?;
           return Ok(
             self
               .c
               .xreadgroup(
-                &self.group,
+                &self.c.group,
                 hostname,
                 count,
-                self.block,
+                self.c.block,
                 false,
                 stream,
                 XID::NewInGroup,
