@@ -1,5 +1,5 @@
 [package]
-name = "xsm"
+name = "xsmer"
 version = "0.1.0"
 edition = "2021"
 
@@ -19,4 +19,4 @@ tokio = { version = "1.29.1", features = [
   "rt-multi-thread",
   "time"
 ] }
-rs_xsm = { path = "../xsm", version = "0.1.0" }
+rs_xsm = { path = "../xsm", version = "0.1.1", package = "xsm" }

@@ -11,7 +11,7 @@ async def main():
   host, port = host_port.split(':')
   server = await server_host_port(host, int(port), 'default',
                                   getenv('REDIS_PASSWORD'))
-
+  print('connected')
   # server.xadd('iaa', 2, packb([]))
   stream = server.stream("iaa")
   limit = 32
