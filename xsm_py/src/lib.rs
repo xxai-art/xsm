@@ -122,7 +122,7 @@ impl Stream {
 
 /// A Python module implemented in Rust.
 #[pymodule]
-fn xstream(_py: Python, m: &PyModule) -> PyResult<()> {
+fn xsmpy(_py: Python, m: &PyModule) -> PyResult<()> {
   // m.add_function(wrap_pyfunction!(sum_as_string, m)?)?;
   m.add_function(wrap_pyfunction!(server_host_port, m)?)?;
   m.add_class::<Client>()?;

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from msgpack import unpackb
-from xstream import server_host_port
+from xsmpy import server_host_port
 import asyncio
 from os import getenv
 
