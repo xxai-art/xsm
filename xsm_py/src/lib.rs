@@ -1,12 +1,12 @@
 use pyo3::{prelude::*, types::PyBytes};
 use pyo3_asyncio::tokio::future_into_py;
-use xsm::xxai_msgpacker::Packable;
+use rs_xsm::xxai_msgpacker::Packable;
 
 #[pyclass]
-pub struct Client(xsm::Client);
+pub struct Client(rs_xsm::Client);
 
 #[pyclass]
-pub struct Stream(xsm::Stream);
+pub struct Stream(rs_xsm::Stream);
 
 #[pyfunction]
 fn server_host_port(
@@ -20,8 +20,8 @@ fn server_host_port(
     let block = 60000;
     let pending = 3 * block;
     let client = Client(
-      xsm::Client::conn(
-        xsm::Server::host_port(host, port),
+      rs_xsm::Client::conn(
+        rs_xsm::Server::host_port(host, port),
         username,
         password,
         Some(block),
@@ -122,7 +122,7 @@ impl Stream {
 
 /// A Python module implemented in Rust.
 #[pymodule]
-fn xsm_py(_py: Python, m: &PyModule) -> PyResult<()> {
+fn xsm(_py: Python, m: &PyModule) -> PyResult<()> {
   // m.add_function(wrap_pyfunction!(sum_as_string, m)?)?;
   m.add_function(wrap_pyfunction!(server_host_port, m)?)?;
   m.add_class::<Client>()?;
