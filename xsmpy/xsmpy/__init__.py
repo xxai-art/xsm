@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from msgpack import unpackb
-from xsmpy import server_host_port
+from xsmpy.xsmpy import server_host_port
 import asyncio
 from os import getenv
 
@@ -31,4 +31,4 @@ async def _run():
 
 
 def run():
-  asyncio.run(run())
+  asyncio.run(_run())

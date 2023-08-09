@@ -1,5 +1,5 @@
 #!/usr/bin/env python
 
-from xsmpy.run import run
+from xsmpy import run
 
 run()
