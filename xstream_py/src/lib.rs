@@ -14,7 +14,7 @@ fn server_host_port(
 ) -> PyResult<&PyAny> {
   pyo3_asyncio::tokio::future_into_py(py, async move {
     let block = 60000;
-    let pending = 32 * block;
+    let pending = 3 * block;
     let client = Client(
       xstream::Client::conn(
         xstream::Server::host_port(host, port),
