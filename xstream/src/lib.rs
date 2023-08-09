@@ -122,6 +122,17 @@ impl Client {
     Ok(())
   }
 
+  pub async fn xackdel(&self, stream: impl AsRef<str>, task_id: impl AsRef<str>) -> Result<()> {
+    self
+      .fcall::<Option<Bytes>, _, _, _>(
+        "xackdel",
+        vec![stream.as_ref(), &self.group],
+        vec![task_id.as_ref()],
+      )
+      .await?;
+    Ok(())
+  }
+
   pub async fn xpendclaim(
     &self,
     stream: impl Into<String>,
