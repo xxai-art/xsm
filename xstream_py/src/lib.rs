@@ -1,5 +1,6 @@
 use pyo3::{prelude::*, types::PyBytes};
 use pyo3_asyncio::tokio::future_into_py;
+use xstream::{xxai_msgpacker::Packable, StreamsInterface, XID};
 
 #[pyclass]
 pub struct Client(xstream::Client);
@@ -46,12 +47,13 @@ impl Client {
   //     pack args
   //   ]
   // ]
-  pub fn xadd(self_: PyRef<'_, Self>, stream: String, id: u64, val: PyBytes) -> PyResult<&PyAny> {
+  pub fn xadd(self_: PyRef<'_, Self>, stream: String, id: u64, val: Vec<u8>) -> PyResult<&PyAny> {
     let py = self_.py();
     let c = self_.0.clone();
     future_into_py(py, async move {
-      c.xadd(stream, false, Some(()), XID::Auto, vec![(id, val)])
-        .await?;
+      let mut id_bin = Vec::new();
+      id.pack(&mut id_bin);
+      c.xadd(stream, (&id_bin[..], &val[..])).await?;
       Ok(Python::with_gil(|py| py.None()))
     })
   }
@@ -64,7 +66,6 @@ impl Stream {
     let c = self_.0.clone();
     future_into_py(py, async move {
       c.xackdel(task_id).await?;
-
       Ok(Python::with_gil(|py| py.None()))
     })
   }

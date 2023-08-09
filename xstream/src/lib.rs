@@ -1,11 +1,10 @@
 #![feature(lazy_cell)]
 #![feature(const_option)]
 
-use std::ops::Deref;
+use std::{marker::Send, ops::Deref};
 
 use anyhow::Result;
 use bytes::Bytes;
-use fred::interfaces::FunctionInterface;
 pub use fred::{
   self,
   interfaces::{ClientLike, StreamsInterface},
@@ -15,9 +14,11 @@ pub use fred::{
   },
   types::XID,
 };
+use fred::{interfaces::FunctionInterface, prelude::RedisError, types::MultipleOrderedPairs};
 use gethostname::gethostname;
 use lazy_static::lazy_static;
 use rand::Rng;
+pub use xxai_msgpacker;
 use xxai_msgpacker::unpack_array;
 
 lazy_static! {
@@ -122,6 +123,22 @@ impl Client {
       c: self.clone(),
       name,
     }
+  }
+
+  pub async fn xadd<V: TryInto<MultipleOrderedPairs> + Send>(
+    &self,
+    stream: impl AsRef<str>,
+    val: V,
+  ) -> Result<()>
+  where
+    V::Error: Into<RedisError> + Send,
+  {
+    Ok(
+      self
+        .c
+        .xadd(stream.as_ref(), false, Some(()), XID::Auto, val)
+        .await?,
+    )
   }
 }
 
