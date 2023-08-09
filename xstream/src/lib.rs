@@ -108,7 +108,7 @@ impl Client {
     let client = RedisClient::new(conf, Some(perf), Some(policy));
 
     // connect to the server, returning a handle to the task that drives the connection
-    let _ = client.connect();
+    let _ = client.connect().await?;
     client.wait_for_connect().await?;
     Ok(Self {
       c: client,
@@ -215,7 +215,7 @@ impl Stream {
         }
       }
     }
-    return Ok(None);
+    Ok(None)
   }
 
   pub async fn xnext(
