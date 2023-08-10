@@ -36,10 +36,10 @@ def _func(func, run_cost):
 async def _run(stream_name, func):
   run_cost = [0, 0]
   f = _func(func, run_cost)
-  host_port = getenv('REDIS_HOST_PORT')
+  host_port = getenv('MQ_HOST_PORT')
   host, port = host_port.split(':')
   server = await server_host_port(host, int(port), 'default',
-                                  getenv('REDIS_PASSWORD'))
+                                  getenv('MQ_PASSWORD'))
   stream = server.stream(stream_name)
   limit = 1
   while True:
