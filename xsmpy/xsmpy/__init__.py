@@ -3,7 +3,7 @@
 from loguru import logger
 from datetime import datetime
 from msgpack import unpackb, packb
-from xsmpy.xsmpy import server_host_port
+from xsmpy.xsmpy import server_host_port, u64_bin
 import asyncio
 from os import getenv
 

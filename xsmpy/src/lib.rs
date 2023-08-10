@@ -9,6 +9,20 @@ pub struct Client(rs_xsm::Client);
 pub struct Stream(rs_xsm::Stream);
 
 #[pyfunction]
+pub fn u64_bin(py: Python<'_>, n: u64) -> PyResult<PyObject> {
+  let n = n.to_le_bytes();
+  let mut i = 8;
+  while i > 0 {
+    let p = i - 1;
+    if n[p] != 0 {
+      break;
+    }
+    i = p;
+  }
+  Ok(PyBytes::new(py, &n[..i]).into())
+}
+
+#[pyfunction]
 fn server_host_port(
   py: Python<'_>,
   host: String,
@@ -123,7 +137,7 @@ impl Stream {
 /// A Python module implemented in Rust.
 #[pymodule]
 fn xsmpy(_py: Python, m: &PyModule) -> PyResult<()> {
-  // m.add_function(wrap_pyfunction!(sum_as_string, m)?)?;
+  m.add_function(wrap_pyfunction!(u64_bin, m)?)?;
   m.add_function(wrap_pyfunction!(server_host_port, m)?)?;
   m.add_class::<Client>()?;
   Ok(())
