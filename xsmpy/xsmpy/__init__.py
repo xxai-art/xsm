@@ -33,6 +33,10 @@ def _func(func, run_cost):
   return _
 
 
+def gather(li):
+  asyncio.gather(*li).add_done_callback(logger.exception)
+
+
 async def _run(stream_name, func):
   run_cost = [0, 0]
   f = _func(func, run_cost)
@@ -47,7 +51,7 @@ async def _run(stream_name, func):
     for xid, [(id, args)] in await stream.xnext(limit):
       li.append(f(stream, xid, server, id, args))
 
-    asyncio.gather(*li)
+    gather(*li)
 
     li = []
     for retry, xid, id, args in await stream.xpendclaim(limit):
@@ -57,7 +61,7 @@ async def _run(stream_name, func):
         continue
       li.append(f(stream, xid, server, id, args))
 
-    asyncio.gather(*li)
+    gather(*li)
 
     [run, cost] = run_cost
     if run:
