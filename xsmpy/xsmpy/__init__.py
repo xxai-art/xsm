@@ -57,7 +57,7 @@ async def _run(stream_name, func):
     [run, cost] = run_cost
     speed = cost / run
     limit = max(1, round(60 / speed))
-    if run > 128:
+    if run > limit:
       run_cost[0] = run / 2
       run_cost[1] = cost / 2
     print('limit', limit, '%.2f ms/item' % (speed * 1000))
