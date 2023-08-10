@@ -10,11 +10,15 @@ from os import getenv
 EMPTY = packb([])
 
 
+def now():
+  return datetime.now().timestamp()
+
+
 def _func(func, run_cost):
 
   async def _(stream, xid, server, id, args):
     try:
-      begin = datetime.now().timestamp()
+      begin = now()
       id = unpackb(id)
       args = unpackb(args)
       r = await func(id, *args)
@@ -26,7 +30,7 @@ def _func(func, run_cost):
           next_args = packb(r[2])
         await server.xadd(r[0], r[1], next_args)
       run_cost[0] += 1
-      run_cost[1] += datetime.now().timestamp() - begin
+      run_cost[1] += now() - begin
     except Exception as e:
       logger.exception(e)
 
@@ -43,7 +47,8 @@ def gather(li):
   asyncio.gather(*li).add_done_callback(callback)
 
 
-async def _run(stream_name, func):
+async def _run(stream_name, func, duration):
+  begin = now()
   run_cost = [0, 0]
   f = _func(func, run_cost)
   host_port = getenv('MQ_HOST_PORT')
@@ -76,8 +81,13 @@ async def _run(stream_name, func):
       if run > limit:
         run_cost[0] = run / 2
         run_cost[1] = cost / 2
-      logger.info('limit %d %.2f ms/item' % (limit, speed * 1000))
+      logger.info('limit %d %.3f s/item' % (limit, speed))
+
+    remain = now() - begin
+    if remain > duration:
+      return
+    logger.info(f'remain {remain} s')
 
 
-def run(stream, func):
-  asyncio.run(_run(stream, func))
+def run(stream, func, duration=86280):
+  asyncio.run(_run(stream, func, duration))
