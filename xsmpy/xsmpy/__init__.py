@@ -56,7 +56,7 @@ async def _run(stream_name, func):
     [run, cost] = run_cost
     if run:
       speed = cost / run
-      limit = max(1, round(60 / speed))
+      limit = max(1, round(((60 / speed) + limit * 7) / 8))
       if run > limit:
         run_cost[0] = run / 2
         run_cost[1] = cost / 2
