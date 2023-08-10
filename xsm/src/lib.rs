@@ -5,6 +5,7 @@ use std::{marker::Send, ops::Deref};
 
 use anyhow::Result;
 use bytes::Bytes;
+use frand::Rand;
 pub use fred::{
   self,
   interfaces::{ClientLike, StreamsInterface},
@@ -172,7 +173,7 @@ impl Stream {
   ) -> Result<Option<Vec<(u64, u64, u64, Vec<u8>, Vec<u8>)>>> {
     let mut rng = Rand::new();
 
-    if 0 == rand::gen::<u16> % (7 * 24 * 60) {
+    if 0 == rng.gen::<u16>() % (7 * 24 * 60) {
       self.xclean().await?;
     }
     if let Some(r) = self
