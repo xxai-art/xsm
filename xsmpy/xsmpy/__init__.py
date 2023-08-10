@@ -43,15 +43,21 @@ async def _run(stream_name, func):
   stream = server.stream(stream_name)
   limit = 1
   while True:
+    li = []
     for xid, [(id, args)] in await stream.xnext(limit):
-      await f(stream, xid, server, id, args)
+      li.append(f(stream, xid, server, id, args))
 
+    asyncio.gather(*li)
+
+    li = []
     for retry, xid, id, args in await stream.xpendclaim(limit):
       logger.info(f'retry {retry} {xid} {id} {args}')
       if retry > 9:
-        await stream.xackdel(xid)
+        li.append(stream.xackdel(xid))
         continue
-      await f(stream, xid, server, id, args)
+      li.append(f(stream, xid, server, id, args))
+
+    asyncio.gather(*li)
 
     [run, cost] = run_cost
     if run:
