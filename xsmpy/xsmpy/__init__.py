@@ -71,29 +71,32 @@ async def _run(stream_name, func, duration):
 
     await gather(run_cost, li)
 
-    li = []
-    for retry, xid, id, args in await stream.xpendclaim(limit):
-      logger.info(f'retry {retry} {xid} {id} {args}')
-      if retry > 9:
-        li.append(stream.xackdel(xid))
-        continue
-      li.append(f(stream, xid, server, id, args))
+    while True:
+      li = []
+      for retry, xid, id, args in await stream.xpendclaim(limit):
+        logger.info(f'retry {retry} {xid} {id} {args}')
+        if retry > 9:
+          li.append(stream.xackdel(xid))
+          continue
+        li.append(f(stream, xid, server, id, args))
 
-    await gather(run_cost, li)
+      await gather(run_cost, li)
 
-    [run, cost] = run_cost
-    if run:
-      speed = cost / run
-      limit = max(1, round(((60 / speed) + limit * 7) / 8))
-      if run > limit:
-        run_cost[0] = run / 2
-        run_cost[1] = cost / 2
-      logger.info('%.3f s/item %d limit' % (speed, limit))
+      [run, cost] = run_cost
+      if run:
+        speed = cost / run
+        limit = max(1, round(((60 / speed) + limit * 7) / 8))
+        if run > limit:
+          run_cost[0] = run / 2
+          run_cost[1] = cost / 2
+        logger.info('%.3f s/item %d limit' % (speed, limit))
 
-    remain = duration - now() + begin
-    if remain < 0:
-      return
-    logger.info(f'remain {remain/60:.1f} min')
+      remain = duration - now() + begin
+      if remain < 0:
+        return
+      logger.info(f'remain {remain/60:.1f} min')
+      if len(li) == 0:  # 有 pending 优先处理 pending
+        break
 
 
 def run(stream, func, duration=86000):
