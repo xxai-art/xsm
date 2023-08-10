@@ -46,7 +46,8 @@ async def _run(stream_name, func):
   limit = 1
   while True:
     for retry, xid, id, args in await stream.xpendclaim(limit):
-      if retry > 6:
+      print('retry', retry, xid, id, args)
+      if retry > 9:
         await stream.xackdel(xid)
         continue
       await f(stream, xid, server, id, args)
