@@ -81,13 +81,13 @@ async def _run(stream_name, func, duration):
       if run > limit:
         run_cost[0] = run / 2
         run_cost[1] = cost / 2
-      logger.info('limit %d %.3f s/item' % (limit, speed))
+      logger.info('%.3f s/item %d limit' % (speed, limit))
 
-    remain = now() - begin
-    if remain > duration:
+    remain = duration - now() + begin
+    if remain < 0:
       return
-    logger.info(f'remain {remain} s')
+    logger.info(f'remain {remain/60:.1f} min')
 
 
-def run(stream, func, duration=86280):
+def run(stream, func, duration=86000):
   asyncio.run(_run(stream, func, duration))
