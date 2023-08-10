@@ -10,10 +10,10 @@ description = "redis stream for rust"
 [dependencies]
 anyhow = "1.0.72"
 bytes = "1.4.0"
+frand = "0.7.3"
 fred = "6.3.0"
 gethostname = "0.4.3"
 lazy_static = "1.4.0"
-rand = "0.8.5"
 tokio = { version = "1.29.1", features = [
   "macros",
   "rt",

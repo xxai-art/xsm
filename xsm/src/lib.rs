@@ -17,7 +17,6 @@ pub use fred::{
 use fred::{interfaces::FunctionInterface, prelude::RedisError, types::MultipleOrderedPairs};
 use gethostname::gethostname;
 use lazy_static::lazy_static;
-use rand::Rng;
 pub use xxai_msgpacker;
 use xxai_msgpacker::unpack_array;
 
@@ -171,7 +170,9 @@ impl Stream {
     &self,
     limit: u32,
   ) -> Result<Option<Vec<(u64, u64, u64, Vec<u8>, Vec<u8>)>>> {
-    if 0 == rand::thread_rng().gen_range(0..7 * 24 * 60) {
+    let mut rng = Rand::new();
+
+    if 0 == rand::gen::<u16> % (7 * 24 * 60) {
       self.xclean().await?;
     }
     if let Some(r) = self

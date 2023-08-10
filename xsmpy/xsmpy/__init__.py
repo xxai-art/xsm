@@ -3,7 +3,8 @@
 from loguru import logger
 from datetime import datetime
 from msgpack import unpackb, packb
-from xsmpy.xsmpy import server_host_port, u64_bin
+from xsmpy.xsmpy import server_host_port
+from xsmpy.xsmpy import u64_bin  #noqa
 import asyncio
 from os import getenv
 
@@ -85,7 +86,7 @@ async def _run(stream_name, func, duration):
       [run, cost] = run_cost
       if run:
         speed = cost / run
-        limit = max(1, round(((60 / speed) + limit * 7) / 8))
+        limit = round(60 / speed) + 1
         if run > limit:
           run_cost[0] = run / 2
           run_cost[1] = cost / 2

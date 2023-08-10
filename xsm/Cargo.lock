@@ -212,6 +212,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "frand"
+version = "0.7.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eb72b65e85e5b0a8e33186c2fdcf64b84a670baf99a9b29340b014a715b24cd8"
+
+[[package]]
 name = "fred"
 version = "6.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -991,6 +997,7 @@ version = "0.1.1"
 dependencies = [
  "anyhow",
  "bytes",
+ "frand",
  "fred",
  "gethostname",
  "lazy_static",
