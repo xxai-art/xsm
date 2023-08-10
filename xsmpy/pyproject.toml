@@ -4,7 +4,6 @@ build-backend = "maturin"
 
 [project]
 name = "xsmpy"
-homepage = "https://github.com/xxai-art/xsm"
 dependencies = ["msgpack", "loguru"]
 requires-python = ">=3.7"
 classifiers = [
