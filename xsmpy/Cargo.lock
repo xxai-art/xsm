@@ -212,6 +212,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "frand"
+version = "0.7.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eb72b65e85e5b0a8e33186c2fdcf64b84a670baf99a9b29340b014a715b24cd8"
+
+[[package]]
 name = "fred"
 version = "6.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1099,16 +1105,16 @@ checksum = "1a515f5799fe4961cb532f983ce2b23082366b898e52ffbce459c86f67c8378a"
 
 [[package]]
 name = "xsm"
-version = "0.1.1"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b1215d180586f29f06c0b8277091423c1c5924b0749b4a8db79bdd42b8624748"
+checksum = "32d79b7da5b1c7ca8d75421df8c774faccb12bf1d4959c3215861cd33542bc17"
 dependencies = [
  "anyhow",
  "bytes",
+ "frand",
  "fred",
  "gethostname",
  "lazy_static",
- "rand",
  "tokio",
  "xxai-msgpacker",
 ]
