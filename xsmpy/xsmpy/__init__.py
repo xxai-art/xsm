@@ -14,11 +14,10 @@ def now():
   return datetime.now().timestamp()
 
 
-def _func(func, run_cost):
+def _func(func):
 
   async def _(stream, xid, server, id, args):
     try:
-      begin = now()
       id = unpackb(id)
       args = unpackb(args)
       r = await func(id, *args)
@@ -29,28 +28,36 @@ def _func(func, run_cost):
         else:
           next_args = packb(r[2])
         await server.xadd(r[0], r[1], next_args)
-      run_cost[0] += 1
-      run_cost[1] += now() - begin
     except Exception as e:
       logger.exception(e)
 
   return _
 
 
-def callback(f):
+def callback(run_cost, f):
   e = f.exception()
-  if e is not None:
+  if e is None:
+    run_cost[0] += 1
+  else:
     logger.exception(e)
 
 
-def gather(li):
-  asyncio.gather(*li).add_done_callback(callback)
+async def gather(run_cost, li):
+  pre = run_cost[0]
+
+  begin = now()
+  r = asyncio.gather(*li)
+  r.add_done_callback(lambda r: callback(run_cost, r))
+
+  await r
+  if run_cost[0] != pre:
+    run_cost[1] += (now() - begin)
 
 
 async def _run(stream_name, func, duration):
   begin = now()
   run_cost = [0, 0]
-  f = _func(func, run_cost)
+  f = _func(func)
   host_port = getenv('MQ_HOST_PORT')
   host, port = host_port.split(':')
   server = await server_host_port(host, int(port), 'default',
@@ -62,7 +69,7 @@ async def _run(stream_name, func, duration):
     for xid, [(id, args)] in await stream.xnext(limit):
       li.append(f(stream, xid, server, id, args))
 
-    gather(li)
+    await gather(run_cost, li)
 
     li = []
     for retry, xid, id, args in await stream.xpendclaim(limit):
@@ -72,7 +79,7 @@ async def _run(stream_name, func, duration):
         continue
       li.append(f(stream, xid, server, id, args))
 
-    gather(li)
+    await gather(run_cost, li)
 
     [run, cost] = run_cost
     if run:
