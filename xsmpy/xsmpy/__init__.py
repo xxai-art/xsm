@@ -31,6 +31,7 @@ def _func(func):
         await server.xadd(r[0], r[1], next_args)
     except Exception as e:
       logger.exception(e)
+      await asyncio.sleep(3)
 
   return _
 
@@ -41,7 +42,7 @@ def callback(run_cost, f):
     run_cost[0] += 1
   else:
     logger.exception(e)
-    await asyncio.sleep(3)
+
 
 async def gather(run_cost, li):
   pre = run_cost[0]
