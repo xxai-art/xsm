@@ -29,9 +29,10 @@ fn server_host_port(
   port: u16,
   username: Option<String>,
   password: Option<String>,
+  block: u64,
 ) -> PyResult<&PyAny> {
   pyo3_asyncio::tokio::future_into_py(py, async move {
-    let block = 5 * 60 * 1000;
+    let block = block * 1000;
     let pending = 3 * block;
     let client = Client(
       rs_xsm::Client::conn(

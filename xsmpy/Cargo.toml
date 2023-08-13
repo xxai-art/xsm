@@ -1,6 +1,6 @@
 [package]
 name = "xsmpy"
-version = "0.2.9"
+version = "0.3.0"
 edition = "2021"
 homepage = "https://github.com/xxai-art/xsm"
 description = "redis stream for python"

@@ -9,6 +9,7 @@ import asyncio
 from os import getenv
 
 EMPTY = packb([])
+BLOCK = 300
 
 
 def now():
@@ -63,7 +64,7 @@ async def _run(stream_name, func, duration):
   host_port = getenv('MQ_HOST_PORT')
   host, port = host_port.split(':')
   server = await server_host_port(host, int(port), 'default',
-                                  getenv('MQ_PASSWORD'))
+                                  getenv('MQ_PASSWORD'), BLOCK)
   stream = server.stream(stream_name)
   limit = 1
   while True:
@@ -87,7 +88,7 @@ async def _run(stream_name, func, duration):
       [run, cost] = run_cost
       if run:
         speed = cost / run
-        limit = round(60 / speed) + 1
+        limit = round(BLOCK / speed) + 1
         if run > limit:
           run_cost[0] = run / 2
           run_cost[1] = cost / 2
