@@ -1,25 +1,30 @@
-[package]
-name = "xsmpy"
-version = "0.3.0"
-edition = "2021"
-homepage = "https://github.com/xxai-art/xsm"
-description = "redis stream for python"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-[lib]
-name = "xsmpy"
-crate-type = ["cdylib"]
-
 [dependencies]
-anyhow = "1.0.72"
-bytes = "1.4.0"
-pyo3 = { version = "0.19.2", features = ["anyhow"] }
-pyo3-asyncio = { version = "0.19.0", features = ["tokio", "tokio-runtime"] }
-tokio = { version = "1.29.1", features = [
-  "macros",
-  "rt",
-  "rt-multi-thread",
-  "time"
-] }
-rs_xsm = { version = "0.1.2", package = "xsm" }
-# rs_xsm = { path = "../xsm", version = "0.1.1", package = "xsm" }
+anyhow = '1.0.72'
+bytes = '1.4.0'
+
+[dependencies.pyo3]
+features = ['anyhow']
+version = '0.19.2'
+
+[dependencies.pyo3-asyncio]
+features = ['tokio', 'tokio-runtime']
+version = '0.19.0'
+
+[dependencies.rs_xsm]
+package = 'xsm'
+version = '0.1.2'
+
+[dependencies.tokio]
+features = ['macros', 'rt', 'rt-multi-thread', 'time']
+version = '1.29.1'
+
+[lib]
+crate-type = ['cdylib']
+name = 'xsmpy'
+
+[package]
+description = 'redis stream for python'
+edition = '2021'
+homepage = 'https://github.com/xxai-art/xsm'
+name = 'xsmpy'
+version = '0.3.0'
