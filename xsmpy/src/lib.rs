@@ -25,15 +25,15 @@ pub fn u64_bin(py: Python<'_>, n: u64) -> PyResult<PyObject> {
 #[pyfunction]
 fn server_host_port(
   py: Python<'_>,
+  block: u64,
   host: String,
   port: u16,
   username: Option<String>,
   password: Option<String>,
-  block: u64,
 ) -> PyResult<&PyAny> {
+  let block = block * 1000;
+  let pending = 3 * block;
   pyo3_asyncio::tokio::future_into_py(py, async move {
-    let block = block * 1000;
-    let pending = 3 * block;
     let client = Client(
       rs_xsm::Client::conn(
         rs_xsm::Server::host_port(host, port),

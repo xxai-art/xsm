@@ -63,8 +63,8 @@ async def _run(stream_name, func, duration):
   f = _func(func)
   host_port = getenv('MQ_HOST_PORT')
   host, port = host_port.split(':')
-  server = await server_host_port(host, int(port), 'default',
-                                  getenv('MQ_PASSWORD'), BLOCK)
+  server = await server_host_port(BLOCK, host, int(port), 'default',
+                                  getenv('MQ_PASSWORD'))
   stream = server.stream(stream_name)
   limit = 1
   while True:
