@@ -1121,7 +1121,7 @@ dependencies = [
 
 [[package]]
 name = "xsmpy"
-version = "0.2.8"
+version = "0.2.9"
 dependencies = [
  "anyhow",
  "bytes",
