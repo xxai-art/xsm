@@ -37,23 +37,20 @@ def _func(func):
   return _
 
 
-def callback(run_cost, f):
-  e = f.exception()
-  if e is None:
-    run_cost[0] += 1
-  else:
-    logger.exception(e)
-
-
 async def gather(run_cost, li):
-  pre = run_cost[0]
+
+  n = 0
 
   begin = now()
-  r = asyncio.gather(*li)
-  r.add_done_callback(lambda r: callback(run_cost, r))
+  for pos, i in enumerate(await asyncio.gather(*li, return_exceptions=True)):
+    if isinstance(i, Exception):
+      logger.error(li[pos])
+      logger.exception(i)
+    else:
+      n += 1
 
-  await r
-  if run_cost[0] != pre:
+  if n:
+    run_cost[0] += n
     run_cost[1] += (now() - begin)
 
 
