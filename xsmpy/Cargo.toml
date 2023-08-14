@@ -1,3 +1,10 @@
+[package]
+description = 'redis stream for python'
+edition = '2021'
+homepage = 'https://github.com/xxai-art/xsm'
+name = 'xsmpy'
+version = '0.3.1'
+
 [dependencies]
 anyhow = '1.0.72'
 bytes = '1.4.0'
@@ -21,10 +28,3 @@ version = '1.29.1'
 [lib]
 crate-type = ['cdylib']
 name = 'xsmpy'
-
-[package]
-description = 'redis stream for python'
-edition = '2021'
-homepage = 'https://github.com/xxai-art/xsm'
-name = 'xsmpy'
-version = '0.3.0'
