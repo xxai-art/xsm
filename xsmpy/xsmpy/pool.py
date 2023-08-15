@@ -1,47 +1,59 @@
 #!/usr/bin/env python
 from loguru import logger
-from asyncio import Semaphore
+from asyncio import ensure_future, sleep
 from time import time
 
 
-async def wrap(sem, func):
+def wrap(func):
 
-  def _(*args):
+  async def _(*args):
     try:
-      async with sem:
-        begin = time()
-        await func(*args)
-        return time() - begin
+      begin = time()
+      await func(*args)
+      return time() - begin
     except Exception as e:
       logger.error("%s %s" % (func, args))
       logger.exception(e)
+      await sleep(3)
       return
 
   return _
 
 
-async def pool(block, duration, func, async_iter):
+async def pool(func, block, duration, async_iter):
   duration -= 5 * block  # 提前结束避免超过
   limit = 2
-  sem = Semaphore(limit)
-  func = wrap(sem, func)
+  func = wrap(func)
   startup = time()
-  n = 0
-  sum_cost = 0
-  while True:
-    async for i in async_iter(limit):
-      cost = await func(i)
+
+  n = sum_cost = runing = 0
+
+  async def _(i):
+    nonlocal n, sum_cost, limit, runing
+    try:
+      cost = await func(*i)
       if cost:
         n += 1
         sum_cost += cost
-        if n >= limit:
+        if n >= limit and 0 == n % 2:
           speed = sum_cost / n
           limit = 1 + round(block / speed)
           logger.info('%.3f s/item %d limit' % (speed, limit))
-          sem._value = limit
           sum_cost /= 2
           n /= 2
+    finally:
+      runing -= 1
+
+  while True:
+    async for i in async_iter(limit):
+      runing += 1
+      task = _(i)
+      if runing >= limit:
+        await task
+      else:
+        ensure_future(task)
+
     diff = duration - (time() - startup)
     if diff <= 0:
       return
-    logger.info('remain hour %.2f', diff / 3600)
+    logger.info('remain %.2f h' % (diff / 3600))
