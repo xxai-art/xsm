@@ -67,8 +67,7 @@ def log_err(func, args):
 
 
 def ensure_future(func, *args):
-  task = asyncio.ensure_future(func(*args))
-  task.add_done_callback(log_err(func, args))
+  asyncio.ensure_future(func(*args)).add_done_callback(log_err(func, args))
 
 
 async def _run(stream_name, func, duration):
