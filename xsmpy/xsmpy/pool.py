@@ -60,6 +60,7 @@ async def pool(func, block, duration, async_iter):
       logger.info('%.3f s/item %d limit remain %.2f h' %
                   (speed, limit, diff / 3600))
       n = 0
-      if sum_cost > limit:
-        sum_cost /= 2
+      t = sum_cost / 2
+      if t > limit:
+        sum_cost = t
         sum_n /= 2
