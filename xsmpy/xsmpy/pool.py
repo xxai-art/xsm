@@ -25,10 +25,10 @@ async def pool(func, block, duration, async_iter):
   func = wrap(func)
   startup = time()
 
-  n = sum_cost = runing = 0
+  sum_n = sum_cost = n = runing = 0
 
   async def _(i):
-    nonlocal n, sum_cost, limit, runing
+    nonlocal n, limit, runing
     try:
       if await func(*i):
         n += 1
@@ -53,8 +53,13 @@ async def pool(func, block, duration, async_iter):
       return
 
     if n:
-      speed = (now - begin) / n
+      sum_n += n
+      sum_cost += (now - begin)
+      speed = sum_cost / sum_n
       limit = 1 + round(block / speed)
       logger.info('%.3f s/item %d limit remain %.2f h' %
                   (speed, limit, diff / 3600))
       n = 0
+      if sum_cost > limit:
+        sum_cost /= 2
+        sum_n /= 2
