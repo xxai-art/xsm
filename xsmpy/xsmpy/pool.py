@@ -8,9 +8,8 @@ def wrap(func):
 
   async def _(*args):
     try:
-      begin = time()
       await func(*args)
-      return time() - begin
+      return True
     except Exception as e:
       logger.error("%s %s" % (func, args))
       logger.exception(e)
@@ -31,20 +30,14 @@ async def pool(func, block, duration, async_iter):
   async def _(i):
     nonlocal n, sum_cost, limit, runing
     try:
-      cost = await func(*i)
-      if cost:
+      if await func(*i):
         n += 1
-        sum_cost += cost
-        if n >= limit and 0 == n % 2:
-          speed = sum_cost / n
-          limit = 1 + round(block / speed)
-          logger.info('%.3f s/item %d limit' % (speed, limit))
-          sum_cost /= 2
-          n /= 2
     finally:
       runing -= 1
 
   while True:
+    begin = time()
+
     async for i in async_iter(limit):
       runing += 1
       task = _(i)
@@ -53,7 +46,15 @@ async def pool(func, block, duration, async_iter):
       else:
         ensure_future(task)
 
-    diff = duration - (time() - startup)
+    now = time()
+
+    diff = duration - (now - startup)
     if diff <= 0:
       return
-    logger.info('remain %.2f h' % (diff / 3600))
+
+    if n:
+      speed = (now - begin) / n
+      limit = 1 + round(block / speed)
+      logger.info('%.3f s/item %d limit remain %.2f h' %
+                  (speed, limit, diff / 3600))
+      n = 0
