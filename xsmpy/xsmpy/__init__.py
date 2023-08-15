@@ -54,6 +54,23 @@ async def gather(run_cost, li):
     run_cost[1] += (now() - begin)
 
 
+def log_err(func, args):
+
+  def _(task):
+    try:
+      task.result()
+    except Exception as e:
+      logger.error("%s %s" % (func, args))
+      logger.exception(e)
+
+  return _
+
+
+def ensure_future(func, *args):
+  task = asyncio.ensure_future(func(*args))
+  task.add_done_callback(log_err(func, args))
+
+
 async def _run(stream_name, func, duration):
   begin = now()
   run_cost = [0, 0]
@@ -76,7 +93,7 @@ async def _run(stream_name, func, duration):
       for retry, xid, id, args in await stream.xpendclaim(limit):
         logger.info(f'retry {retry} {xid} {id} {args}')
         if retry > 9:
-          asyncio.ensure_future(stream.xackdel(xid))
+          ensure_future(stream.xackdel, xid)
           continue
         li.append(f(stream, xid, server, id, args))
 
