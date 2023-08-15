@@ -29,7 +29,6 @@ async def pool(block, duration, func, async_iter):
   sum_cost = 0
   startup = time()
   while True:
-    time()
     async for i in async_iter(limit):
       cost = await func(i)
       if cost:
