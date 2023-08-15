@@ -9,4 +9,4 @@ async def task(id, *args):
   return
 
 
-run('iaa', task)
+run('test', task)
