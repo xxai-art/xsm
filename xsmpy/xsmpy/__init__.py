@@ -76,7 +76,7 @@ async def _run(stream_name, func, duration):
       for retry, xid, id, args in await stream.xpendclaim(limit):
         logger.info(f'retry {retry} {xid} {id} {args}')
         if retry > 9:
-          li.append(stream.xackdel(xid))
+          asyncio.ensure_future(stream.xackdel(xid))
           continue
         li.append(f(stream, xid, server, id, args))
 
